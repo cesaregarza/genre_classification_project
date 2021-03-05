@@ -29,7 +29,7 @@ def partial_matrix_mult(first_matrix, second_matrix, coordinate_rows, coordinate
 
     return return_matrix
 
-def sides_svt(input_matrix_1, input_matrix_2, input_matrix_3, L, learning_rate):
+def sides_svt(input_matrix_1, input_matrix_2, input_matrix_3, L, regularization_param):
     """Soft Singular Value Thresholding algorithm
 
     Args:
@@ -37,7 +37,7 @@ def sides_svt(input_matrix_1, input_matrix_2, input_matrix_3, L, learning_rate):
         input_matrix_2 (float64[:,:]): matrix A'AYBB_Omega
         input_matrix_3 (float64[:,:]): matrix A'MB_Omega
         L (float64): parameter L TODO: RENAME THIS
-        learning_rate (float64): I THINK this is the learning rate. TODO: RENAME THIS
+        regularization_param (float64): regularization parameter lambda
 
     Returns:
         float64[:,:]: thresholded SVD
@@ -45,7 +45,7 @@ def sides_svt(input_matrix_1, input_matrix_2, input_matrix_3, L, learning_rate):
     interim_matrix_A = input_matrix_1 - input_matrix_2 / L + input_matrix_3 / L
     [svd_matrix_L, svd_matrix_S, svd_matrix_T] = np.linalg.svd(interim_matrix_A)
     #Threshold the singular values
-    svd_matrix_S = np.clip(svd_matrix_S - learning_rate / L, a_min = 0, a_max = None)
+    svd_matrix_S = np.clip(svd_matrix_S - regularization_param / L, a_min = 0, a_max = None)
     return svd_matrix_L @ svd_matrix_S @ svd_matrix_T.T
 
 def maxide(input_matrix: np.ndarray, side_matrix_A: np.ndarray, side_matrix_B: np.ndarray, regularization_param: float, max_iterations: int = 100):
