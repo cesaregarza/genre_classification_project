@@ -29,6 +29,25 @@ def partial_matrix_mult(first_matrix, second_matrix, coordinate_rows, coordinate
 
     return return_matrix
 
+def sides_svd_2_threshold(input_matrix_1, input_matrix_2, input_matrix_3, L, learning_rate):
+    """Thresholding function for the SVD (I think)
+
+    Args:
+        input_matrix_1 (float64[:,:]): Left   input matrix
+        input_matrix_2 (float64[:,:]): Middle input matrix
+        input_matrix_3 (float64[:,:]): Right  input matrix
+        L (float64): L, whatever that means. TODO: RENAME THIS
+        learning_rate (float64): I THINK this is the learning rate. TODO: RENAME THIS
+
+    Returns:
+        float64[:,:]: thresholded SVD
+    """
+    interim_matrix_A = input_matrix_1 - input_matrix_2 / L + input_matrix_3 / L
+    [svd_matrix_L, svd_matrix_S, svd_matrix_T] = np.linalg.svd(interim_matrix_A)
+    #Turn all negatives to zero
+    svd_matrix_S = np.clip(svd_matrix_S - learning_rate / L, a_min = 0, a_max = None)
+    return svd_matrix_L @ svd_matrix_S @ svd_matrix_T.T
+
 def maxide(input_matrix: np.ndarray, side_matrix_A: np.ndarray, side_matrix_B: np.ndarray, regularization_param: float, max_iterations: int = 100):
 
     time_start = time()
@@ -68,7 +87,7 @@ def maxide(input_matrix: np.ndarray, side_matrix_A: np.ndarray, side_matrix_B: n
         stvdt3 = side_matrix_A.T @ input_matrix @ side_matrix_B
         matrix_A_Z0_B_Omega = np.zeros(side_matrix_A.shape[0], side_matrix_B.shape[0])[input_matrix_non_zero_mask]
 
-    matrix_A_Z_B_Omega = matrix_A_Z0_B_Omega
+    matrix_A_Z_B_Omega = matrix_A_Z0_B_Omega.copy()
 
     #Matrix Completion iteration
     for iteration in range(max_iterations):
@@ -79,6 +98,12 @@ def maxide(input_matrix: np.ndarray, side_matrix_A: np.ndarray, side_matrix_B: n
 
         matrix_A_Y_B_Omega = (1 + alpha_constant) * matrix_A_Z_B_Omega - alpha_constant * matrix_A_Z0_B_Omega
         
+        #Create a sparse version to speed up matrix multiplication
+        sparse_A_Y_B_Omega = sp.sparse.coo_matrix((matrix_A_Y_B_Omega, nonzero_row_array, nonzero_col_array.T), shape=(input_size_n, input_size_m))
+        
         if multi_label_bool:
-            #This is line 77 in Maxide.m
-            pass
+            stvdt2 = side_matrix_A.T @ sparse_A_Y_B_Omega
+        else:
+            stvdt2 = side_matrix_A.T @ sparse_A_Y_B_Omega @ side_matrix_B
+        
+        
