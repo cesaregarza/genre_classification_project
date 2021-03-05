@@ -29,14 +29,14 @@ def partial_matrix_mult(first_matrix, second_matrix, coordinate_rows, coordinate
 
     return return_matrix
 
-def sides_svd_2_threshold(input_matrix_1, input_matrix_2, input_matrix_3, L, learning_rate):
-    """Thresholding function for the SVD (I think)
+def sides_svt(input_matrix_1, input_matrix_2, input_matrix_3, L, learning_rate):
+    """Soft Singular Value Thresholding algorithm
 
     Args:
-        input_matrix_1 (float64[:,:]): Left   input matrix
-        input_matrix_2 (float64[:,:]): Middle input matrix
-        input_matrix_3 (float64[:,:]): Right  input matrix
-        L (float64): L, whatever that means. TODO: RENAME THIS
+        input_matrix_1 (float64[:,:]): matrix_Y_k
+        input_matrix_2 (float64[:,:]): matrix A'AYBB_Omega
+        input_matrix_3 (float64[:,:]): matrix A'MB_Omega
+        L (float64): parameter L TODO: RENAME THIS
         learning_rate (float64): I THINK this is the learning rate. TODO: RENAME THIS
 
     Returns:
@@ -44,7 +44,7 @@ def sides_svd_2_threshold(input_matrix_1, input_matrix_2, input_matrix_3, L, lea
     """
     interim_matrix_A = input_matrix_1 - input_matrix_2 / L + input_matrix_3 / L
     [svd_matrix_L, svd_matrix_S, svd_matrix_T] = np.linalg.svd(interim_matrix_A)
-    #Turn all negatives to zero
+    #Threshold the singular values
     svd_matrix_S = np.clip(svd_matrix_S - learning_rate / L, a_min = 0, a_max = None)
     return svd_matrix_L @ svd_matrix_S @ svd_matrix_T.T
 
@@ -81,6 +81,7 @@ def maxide(input_matrix: np.ndarray, side_matrix_A: np.ndarray, side_matrix_B: n
     #Since multi-label problems have the side information matrix B as the identity, we can save a lot of computation by
     #not multiplying the product of side matrix A and the input matrix with side matrix B, since the result will be unchanged
     if multi_label_bool:
+        #stvdt matrices are used as inputs for the singular value thresholding algorithm that is applied TODO: RENAME THIS
         stvdt3 = side_matrix_A.T @ input_matrix
         matrix_A_Z0_B_Omega = np.zeros(side_matrix_A.shape[0], matrix_B_size_rb)[input_matrix_non_zero_mask]
     else:
